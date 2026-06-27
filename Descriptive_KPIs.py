@@ -18,7 +18,22 @@ st.set_page_config(page_title='e-commerce-analyses', layout='wide')
 data = pd.read_csv("dataset_ecommerce.csv")
 data['order_date'] = pd.to_datetime(data['order_date'])
 
+#IA Chat
+st.sidebar.subheader("AI Analysis")
+user_question = st.sidebar.text_input("Ask a question about your data...")
+
+if user_question:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_question}]
+    )
+    st.sidebar.write("**You:** " + user_question)
+    st.sidebar.write("**AI:** " + response.content[0].text)
+
 # Streamlit filters
+st.sidebar.markdown("---")
 st.sidebar.header("Filters")
 start = st.sidebar.date_input("Start date", value=data['order_date'].min())
 end = st.sidebar.date_input("End date", value=data['order_date'].max())
@@ -68,20 +83,6 @@ col1.metric("Total Turnover", f"{total_turnover:,.2f} €")
 col2.metric("Number of orders", f"{order_nb:,}")
 col3.metric("Total quantity", f"{total_quantity:,}")
 col4.metric("Average basket", f"{average_basket:,.2f} €")
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("AI Analysis")
-user_question = st.sidebar.text_input("Ask a question about your data...")
-
-if user_question:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_question}]
-    )
-    st.sidebar.write("**You:** " + user_question)
-    st.sidebar.write("**AI:** " + response.content[0].text)
     
  #Turnover by month
 st.markdown("---")
