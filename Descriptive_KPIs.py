@@ -61,6 +61,7 @@ avg_basket_by_channel = turnover_by_channel / orders_by_channel
 
 
 #Streamlit display
+
     #Header main KPIs
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Turnover", f"{total_turnover:,.2f} €")
@@ -68,6 +69,20 @@ col2.metric("Number of orders", f"{order_nb:,}")
 col3.metric("Total quantity", f"{total_quantity:,}")
 col4.metric("Average basket", f"{average_basket:,.2f} €")
 
+st.sidebar.markdown("---")
+st.sidebar.subheader("AI Analysis")
+user_question = st.sidebar.text_input("Ask a question about your data...")
+
+if user_question:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_question}]
+    )
+    st.sidebar.write("**You:** " + user_question)
+    st.sidebar.write("**AI:** " + response.content[0].text)
+    
  #Turnover by month
 st.markdown("---")
 st.subheader("Turnover by Month")
@@ -138,18 +153,3 @@ with col3:
     fig = px.bar(avg_basket_df, x='channel', y='avg_basket',color_discrete_sequence=["#4a5568"])
     fig.update_traces(hovertemplate='%{x}<br>€ %{y:,.2f}')
     st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("---")
-st.subheader("AI Analysis")
-
-user_question = st.chat_input("Ask a question about your data...")
-
-if user_question:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_question}]
-    )
-    st.chat_message("user").write(user_question)
-    st.chat_message("assistant").write(response.content[0].text)
