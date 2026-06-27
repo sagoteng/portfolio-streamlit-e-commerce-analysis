@@ -21,6 +21,7 @@ data['order_date'] = pd.to_datetime(data['order_date'])
 #IA Chat
 st.sidebar.subheader("AI Analysis")
 user_question = st.sidebar.text_input("Ask a question about your data...")
+chat_container = st.sidebar.container()
 
 # Streamlit filters
 st.sidebar.markdown("---")
@@ -67,8 +68,8 @@ if user_question:
         system=system_prompt,
         messages=[{"role": "user", "content": user_question}]
     )
-    st.sidebar.write("**You:** " + user_question)
-    st.sidebar.write("**AI:** " + response.content[0].text)
+    chat_container.write("**You:** " + user_question)
+    chat_container.write("**AI:** " + response.content[0].text)
 
 turnover_by_channel = filtered_data.groupby('channel')['revenue'].sum()
 orders_by_channel = filtered_data.groupby('channel')['revenue'].count()
