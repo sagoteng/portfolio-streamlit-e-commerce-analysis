@@ -22,16 +22,6 @@ data['order_date'] = pd.to_datetime(data['order_date'])
 st.sidebar.subheader("AI Analysis")
 user_question = st.sidebar.text_input("Ask a question about your data...")
 
-if user_question:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_question}]
-    )
-    st.sidebar.write("**You:** " + user_question)
-    st.sidebar.write("**AI:** " + response.content[0].text)
-
 # Streamlit filters
 st.sidebar.markdown("---")
 st.sidebar.header("Filters")
@@ -70,6 +60,16 @@ system_prompt = f""" You are an e-commerce data analyst. Here is the store's dat
     - turnover by month : {turnover_by_month}
     - turnover by category : {turnover_by_category}
     Answer concisely and with a business-oriented perspective."""
+if user_question:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_question}]
+    )
+    st.sidebar.write("**You:** " + user_question)
+    st.sidebar.write("**AI:** " + response.content[0].text)
+
 turnover_by_channel = filtered_data.groupby('channel')['revenue'].sum()
 orders_by_channel = filtered_data.groupby('channel')['revenue'].count()
 avg_basket_by_channel = turnover_by_channel / orders_by_channel
