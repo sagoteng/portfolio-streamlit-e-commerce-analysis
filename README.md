@@ -1,6 +1,6 @@
 # E-Commerce Analysis Dashboard
 
-An interactive multi-page web application built with Streamlit for analyzing e-commerce sales data, featuring descriptive analytics, customer segmentation, and revenue forecasting.
+An interactive multi-page web application built with Streamlit for analyzing e-commerce sales data, featuring descriptive analytics, customer segmentation, revenue forecasting and integrated AI chat (Claude).
 
 🔗 **[Live Demo](https://portfolio-app-e-commerce-analysis.streamlit.app)**
 
