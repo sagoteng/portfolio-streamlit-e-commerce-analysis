@@ -12,7 +12,7 @@ load_dotenv()
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 #Data loading
-data = pd.read_csv(r"C:\Users\sagot\Desktop\Portfolio_web_app\dataset_ecommerce.csv")
+data = pd.read_csv("dataset_ecommerce.csv")
 data['order_date'] = pd.to_datetime(data['order_date'])
 
 #Calculate clustering metrics
