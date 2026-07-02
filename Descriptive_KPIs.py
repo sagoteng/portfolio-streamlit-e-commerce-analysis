@@ -15,9 +15,12 @@ client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 st.set_page_config(page_title='e-commerce-analyses', layout='wide')
 
 # File uploader
-uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type="csv")
+uploaded_file = st.sidebar.file_uploader("Upload your file (CSV or Excel)", type=["csv", "xlsx"])
 if uploaded_file is not None:
-    st.session_state['data'] = pd.read_csv(uploaded_file)
+    if uploaded_file.name.endswith('.xlsx'):
+        st.session_state['data'] = pd.read_excel(uploaded_file)
+    else:
+        st.session_state['data'] = pd.read_csv(uploaded_file)
 else:
     if 'data' not in st.session_state:
         st.session_state['data'] = pd.read_csv("dataset_ecommerce.csv")
