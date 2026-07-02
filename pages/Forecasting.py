@@ -8,7 +8,9 @@ from prophet import Prophet
 st.set_page_config(page_title='Forecasting', layout='wide')
 
 # Data loading
-data = pd.read_csv("dataset_ecommerce.csv")
+if 'data' not in st.session_state:
+    st.session_state['data'] = pd.read_csv("dataset_ecommerce.csv")
+data = st.session_state['data']
 data['order_date'] = pd.to_datetime(data['order_date'])
 
 # Prepare data for Prophet

@@ -14,8 +14,14 @@ client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 #Streamlit browser page configuration
 st.set_page_config(page_title='e-commerce-analyses', layout='wide')
 
-#Data loading
-data = pd.read_csv("dataset_ecommerce.csv")
+# File uploader
+uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type="csv")
+if uploaded_file is not None:
+    st.session_state['data'] = pd.read_csv(uploaded_file)
+else:
+    if 'data' not in st.session_state:
+        st.session_state['data'] = pd.read_csv("dataset_ecommerce.csv")
+data = st.session_state['data']
 data['order_date'] = pd.to_datetime(data['order_date'])
 
 #IA Chat
