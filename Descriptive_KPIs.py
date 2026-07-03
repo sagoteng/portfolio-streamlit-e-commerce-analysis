@@ -35,8 +35,12 @@ chat_container = st.sidebar.container()
 # Streamlit filters
 st.sidebar.markdown("---")
 st.sidebar.header("Filters")
-start = st.sidebar.date_input("Start date", value=data['order_date'].min())
-end = st.sidebar.date_input("End date", value=data['order_date'].max())
+last_year = data['order_date'].dt.year.max()
+default_start = pd.Timestamp(f"{last_year}-01-01")
+default_end = data['order_date'].max()
+
+start = st.sidebar.date_input("Date de début", value=default_start)
+end = st.sidebar.date_input("Date de fin", value=default_end)
 selected_categories = st.sidebar.multiselect("Category", options=data['category'].unique(), default=data['category'].unique())
 selected_countries = st.sidebar.multiselect("Country", options=data['country'].unique(), default=data['country'].unique())
 selected_channels = st.sidebar.multiselect("Channel", options=data['channel'].unique(), default=data['channel'].unique())
@@ -85,15 +89,69 @@ orders_by_channel = filtered_data.groupby('channel')['revenue'].count()
 avg_basket_by_channel = turnover_by_channel / orders_by_channel
 
 
+# Calculation previous period
+period_duration = (pd.Timestamp(end) - pd.Timestamp(start)).days
+prev_start = pd.Timestamp(start) - pd.Timedelta(days=period_duration)
+prev_end = pd.Timestamp(start) - pd.Timedelta(days=1)
+
+prev_data = data[
+    (data['order_date'] >= prev_start) &
+    (data['order_date'] <= prev_end) &
+    (data['category'].isin(selected_categories)) &
+    (data['country'].isin(selected_countries)) &
+    (data['channel'].isin(selected_channels))
+]
+
+prev_revenue = prev_data['revenue'].sum()
+prev_average_basket = prev_data['revenue'].sum() / len(prev_data) if len(prev_data) > 0 else 0
+
+delta_revenue = total_turnover - prev_revenue
+delta_basket = average_basket - prev_average_basket
+prev_orders = len(prev_data)
+delta_orders = order_nb - prev_orders
+prev_quantity = prev_data['quantity'].sum() if len(prev_data) > 0 else 0
+delta_quantity = total_quantity - prev_quantity
+
+# Less performing Canal
+worst_channel = turnover_by_channel.idxmin()
+worst_channel_revenue = turnover_by_channel.min()
+
+# Loss of speed of a category
+prev_turnover_by_category = prev_data.groupby('category')['revenue'].sum()
+category_growth = ((turnover_by_category - prev_turnover_by_category) / prev_turnover_by_category * 100).dropna()
+worst_category = category_growth.idxmin()
+worst_category_growth = category_growth.min()
+
+
 #Streamlit display
 
     #Header main KPIs
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Turnover", f"{total_turnover:,.2f} €")
-col2.metric("Number of orders", f"{order_nb:,}")
-col3.metric("Total quantity", f"{total_quantity:,}")
-col4.metric("Average basket", f"{average_basket:,.2f} €")
-    
+col1.metric("Total Turnover", f"{total_turnover:,.2f} €",delta=f"{delta_revenue:+,.2f} €")
+col2.metric("Number of orders", f"{order_nb:,}",delta=f"{delta_orders:+}")
+col3.metric(label="Total quantity", value=f"{total_quantity:,}",delta=f"{delta_quantity:+}")
+col4.metric("Average basket", f"{average_basket:,.2f} €",delta=f"{delta_basket:+,.2f} €")
+
+# Alerts
+st.markdown("---")
+st.subheader("⚠️ Alerts")
+
+if delta_revenue < 0:
+    st.error(f"⚠️ Revenue down vs previous period: {delta_revenue:,.2f} €")
+else:
+    st.success(f"✅ Revenue up vs previous period: +{delta_revenue:,.2f} €")
+
+if delta_basket < 0:
+    st.warning(f"⚠️ Average basket down vs previous period: {delta_basket:,.2f} €")
+else:
+    st.success(f"✅ Average basket up vs previous period: +{delta_basket:,.2f} €")
+
+st.warning(f"⚠️ Lowest performing channel: {worst_channel} ({worst_channel_revenue:,.2f} €)")
+
+if worst_category_growth < -10:
+    st.error(f"⚠️ Category in sharp decline: {worst_category} ({worst_category_growth:.1f}% vs previous period)")
+elif worst_category_growth < 0:
+    st.warning(f"⚠️ Category in decline: {worst_category} ({worst_category_growth:.1f}% vs previous period)")    
  #Turnover by month
 st.markdown("---")
 st.subheader("Turnover by Month")
