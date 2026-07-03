@@ -89,7 +89,7 @@ orders_by_channel = filtered_data.groupby('channel')['revenue'].count()
 avg_basket_by_channel = turnover_by_channel / orders_by_channel
 
 
-# Calculation previous period
+    # Calculation previous period & Deltas
 period_duration = (pd.Timestamp(end) - pd.Timestamp(start)).days
 prev_start = pd.Timestamp(start) - pd.Timedelta(days=period_duration)
 prev_end = pd.Timestamp(start) - pd.Timedelta(days=1)
@@ -112,25 +112,36 @@ delta_orders = order_nb - prev_orders
 prev_quantity = prev_data['quantity'].sum() if len(prev_data) > 0 else 0
 delta_quantity = total_quantity - prev_quantity
 
-# Less performing Canal
+    # Less performing Canal
 worst_channel = turnover_by_channel.idxmin()
 worst_channel_revenue = turnover_by_channel.min()
 
-# Loss of speed of a category
+    # Loss of speed of a category
 prev_turnover_by_category = prev_data.groupby('category')['revenue'].sum()
 category_growth = ((turnover_by_category - prev_turnover_by_category) / prev_turnover_by_category * 100).dropna()
 worst_category = category_growth.idxmin()
 worst_category_growth = category_growth.min()
 
+    # Margin calculation
+total_margin = filtered_data['margin'].sum()
+avg_margin_rate = filtered_data['margin_rate'].mean()
+
+prev_margin = prev_data['margin'].sum() if len(prev_data) > 0 else 0
+prev_margin_rate = prev_data['margin_rate'].mean() if len(prev_data) > 0 else 0
+delta_margin = total_margin - prev_margin
+delta_margin_rate = avg_margin_rate - prev_margin_rate
+
 
 #Streamlit display
 
     #Header main KPIs
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 col1.metric("Total Turnover", f"{total_turnover:,.2f} €",delta=f"{delta_revenue:+,.2f} €")
 col2.metric("Number of orders", f"{order_nb:,}",delta=f"{delta_orders:+}")
 col3.metric(label="Total quantity", value=f"{total_quantity:,}",delta=f"{delta_quantity:+}")
 col4.metric("Average basket", f"{average_basket:,.2f} €",delta=f"{delta_basket:+,.2f} €")
+col5.metric("Marge totale", f"{total_margin:,.2f} €", delta=f"{delta_margin:,.2f} €")
+col6.metric("Taux de marge moyen", f"{avg_margin_rate:.1f}%", delta=f"{delta_margin_rate:.1f}%")
 
 # Alerts
 st.markdown("---")
@@ -151,7 +162,12 @@ st.warning(f"⚠️ Lowest performing channel: {worst_channel} ({worst_channel_r
 if worst_category_growth < -10:
     st.error(f"⚠️ Category in sharp decline: {worst_category} ({worst_category_growth:.1f}% vs previous period)")
 elif worst_category_growth < 0:
-    st.warning(f"⚠️ Category in decline: {worst_category} ({worst_category_growth:.1f}% vs previous period)")    
+    st.warning(f"⚠️ Category in decline: {worst_category} ({worst_category_growth:.1f}% vs previous period)") 
+if avg_margin_rate < 30:
+    st.error(f"⚠️ Taux de marge sous l'objectif e-commerce : {avg_margin_rate:.1f}% (objectif : 30%+)")
+else:
+    st.success(f"✅ Taux de marge dans les objectifs : {avg_margin_rate:.1f}%")
+   
  #Turnover by month
 st.markdown("---")
 st.subheader("Turnover by Month")
